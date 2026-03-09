@@ -2,6 +2,8 @@
 
 An intelligent, AI-powered Hiring Assistant chatbot built for **TalentScout**, a technology recruitment agency. The chatbot conducts initial candidate screenings by gathering essential information and generating tailored technical questions based on each candidate's declared tech stack.
 
+📄 **[Project Documentation (Google Docs)](https://docs.google.com/document/d/1-PHz9LOHbJIKqGVIbrBGxJJopB91jb1V/edit?usp=sharing&ouid=113808350997795356912&rtpof=true&sd=true)**
+
 ---
 
 ## Table of Contents
