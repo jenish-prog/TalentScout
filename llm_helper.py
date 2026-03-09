@@ -90,6 +90,13 @@ For all other fields (name, experience, position, location, tech stack), accept 
 
 ### Conversation State
 Internally track which details you have already collected. Do not ask for information the candidate has already provided. Proceed to the next missing field naturally.
+
+### CRITICAL DISPLAY RULES
+- NEVER show your internal conversation state, tracking notes, or field status to the user.
+- NEVER output bullet lists showing "(missing)" or "(collected)" fields.
+- NEVER output lines like "(Internal note: ...)" or "Conversation State:".
+- Your reply must ONLY contain natural conversational text directed at the candidate — nothing else.
+- Ask for ONE piece of information at a time in a friendly, conversational tone.
 """
 
 # Phrases that signal the candidate wants to end the chat
@@ -191,6 +198,26 @@ def strip_candidate_data_block(text: str) -> str:
     )
     # Remove any remaining candidate_data references
     text = re.sub(r"candidate_data", "", text, flags=re.IGNORECASE)
+    # Remove leaked "Conversation State:" blocks (model internal tracking)
+    text = re.sub(
+        r"(?:^|\n)#+\s*Conversation State.*?(?=\n#|\Z)",
+        "",
+        text,
+        flags=re.DOTALL | re.IGNORECASE,
+    )
+    text = re.sub(
+        r"\*?\*?Conversation State\*?\*?:.*?(?=\n\n|\Z)",
+        "",
+        text,
+        flags=re.DOTALL | re.IGNORECASE,
+    )
+    # Remove "(Internal note: ...)" lines
+    text = re.sub(r"\(Internal note:.*?\)", "", text, flags=re.IGNORECASE)
+    # Remove bullet lines with "(missing)" or "(collected)" status markers
+    text = re.sub(r"^[\s*•\-]*.*\(missing\).*$", "", text, flags=re.MULTILINE | re.IGNORECASE)
+    text = re.sub(r"^[\s*•\-]*.*\(collected\).*$", "", text, flags=re.MULTILINE | re.IGNORECASE)
+    # Collapse excessive blank lines
+    text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()
 
 
