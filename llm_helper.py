@@ -13,6 +13,7 @@ Responsibilities
 import os
 import json
 import re
+import streamlit as st
 from openai import OpenAI
 
 # Groq's API is OpenAI-compatible; we use the openai SDK with a custom base_url.
@@ -100,8 +101,19 @@ EXIT_KEYWORDS = {
 # Helper functions
 # ---------------------------------------------------------------------------
 
+def _get_secret(key: str, default: str = "") -> str:
+    """Read a secret from env vars or st.secrets (Streamlit Cloud)."""
+    val = os.getenv(key, "")
+    if not val:
+        try:
+            val = st.secrets.get(key, default)
+        except Exception:
+            val = default
+    return val
+
+
 def _get_client() -> OpenAI:
-    api_key = os.getenv("GROQ_API_KEY", "")
+    api_key = _get_secret("GROQ_API_KEY")
     if not api_key:
         raise EnvironmentError("GROQ_API_KEY must be set in the environment or .env file.")
     return OpenAI(api_key=api_key, base_url=GROQ_BASE_URL)

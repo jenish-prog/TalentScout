@@ -23,13 +23,25 @@ Requires a Supabase table named 'candidates' with the following schema:
 """
 
 import os
+import streamlit as st
 from supabase import create_client, Client
+
+
+def _get_secret(key: str, default: str = "") -> str:
+    """Read a secret from env vars or st.secrets (Streamlit Cloud)."""
+    val = os.getenv(key, "")
+    if not val:
+        try:
+            val = st.secrets.get(key, default)
+        except Exception:
+            val = default
+    return val
 
 
 def _get_client() -> Client:
     """Return an authenticated Supabase client."""
-    url = os.getenv("SUPABASE_URL", "")
-    key = os.getenv("SUPABASE_KEY", "")
+    url = _get_secret("SUPABASE_URL")
+    key = _get_secret("SUPABASE_KEY")
     if not url or not key:
         raise EnvironmentError(
             "SUPABASE_URL and SUPABASE_KEY must be set in the environment "
