@@ -44,7 +44,10 @@ The entire interaction is context-aware — the chatbot tracks which fields have
 | **Fallback / Guardrails** | Off-topic inputs are politely redirected back to the screening process |
 | **Exit Detection** | Keywords like "bye", "exit", "quit" gracefully end the session |
 | **Privacy-First Design** | No passwords, IDs, or financial data are requested; data handling follows GDPR principles |
-| **Polished UI** | Custom-styled Streamlit interface with sidebar instructions and a "New Conversation" button |
+| **Polished UI** | Custom-styled Streamlit interface with sidebar, progress bar, and "New Conversation" button |
+| **Sentiment Analysis** | Keyword-based sentiment detection tracks candidate mood (positive/neutral/negative) with a live sidebar badge |
+| **Multilingual Support** | The bot detects the candidate's language and responds in the same language automatically |
+| **Screening Progress Bar** | Visual progress indicator in the sidebar showing how far along the info-gathering phase is |
 
 ---
 
@@ -212,13 +215,21 @@ The model is instructed to generate 3-5 questions **per technology** in the cand
 
 ---
 
+## Bonus Features Implemented
+
+- **Sentiment Analysis** — Lightweight keyword-based sentiment detection tracks whether the candidate's mood is positive, neutral, or negative. A live emoji badge in the sidebar updates after each user message.
+- **Multilingual Support** — The system prompt instructs the model to detect the candidate's language and respond in the same language, enabling seamless multilingual conversations.
+- **Screening Progress Bar** — A visual progress bar in the sidebar shows how far along the info-gathering phase is, providing real-time feedback.
+- **Enhanced UI** — Custom CSS styling including gradient header, dark-themed sidebar cards, sentiment badges, and responsive layout.
+
+---
+
 ## Future Enhancements
 
-- **Sentiment Analysis** — Detect candidate frustration or enthusiasm and adjust tone accordingly.
-- **Multilingual Support** — Detect the candidate's language and respond in kind.
 - **Resume Upload** — Parse uploaded resumes to pre-fill candidate details.
 - **Admin Dashboard** — A Streamlit page for recruiters to view and filter stored candidates.
 - **Cloud Deployment** — Deploy on AWS / GCP / Streamlit Cloud for a live demo link.
+- **Advanced Sentiment** — Use an LLM-based sentiment model for more nuanced emotion detection.
 
 ---
 
@@ -228,4 +239,4 @@ This project is developed as an assignment / demo and is provided as-is.
 
 ---
 
-*Built with ❤️ using Streamlit & OpenAI*
+*Built with ❤️ using Streamlit & Groq (Llama 3.3)*

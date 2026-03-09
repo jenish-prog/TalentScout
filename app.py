@@ -14,6 +14,7 @@ from llm_helper import (
     extract_candidate_data,
     is_exit_intent,
     strip_candidate_data_block,
+    analyze_sentiment,
 )
 from supabase_helper import save_candidate
 
@@ -58,6 +59,32 @@ st.markdown(
         margin-bottom: 0.8rem;
         font-size: 0.9rem;
         color: #e2e8f0;
+    }
+
+    /* Sentiment badge */
+    .sentiment-badge {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-top: 0.3rem;
+    }
+    .sentiment-positive { background: #166534; color: #bbf7d0; }
+    .sentiment-negative { background: #991b1b; color: #fecaca; }
+    .sentiment-neutral  { background: #374151; color: #d1d5db; }
+
+    /* Progress bar container */
+    .progress-container {
+        background: #1e293b;
+        border-radius: 8px;
+        padding: 0.8rem 1rem;
+        margin-bottom: 0.8rem;
+    }
+    .progress-container p {
+        color: #e2e8f0;
+        margin: 0 0 0.4rem 0;
+        font-size: 0.85rem;
     }
     </style>
     """,
@@ -107,6 +134,15 @@ with st.sidebar:
     )
 
     st.markdown("---")
+
+    # Screening progress indicator
+    st.markdown("### Screening Progress")
+
+    st.markdown("---")
+
+    # Sentiment analysis display
+    st.markdown("### Candidate Mood")
+
     if st.button("🔄 Start New Conversation"):
         st.session_state.clear()
         st.rerun()
@@ -125,6 +161,33 @@ if "messages" not in st.session_state:
     st.session_state.candidate_saved = False
     # Whether the conversation has ended
     st.session_state.ended = False
+    # Sentiment tracking
+    st.session_state.sentiment_history = []
+
+# ---------------------------------------------------------------------------
+# Sidebar dynamic content (after session state init)
+# ---------------------------------------------------------------------------
+with st.sidebar:
+    # Progress bar
+    if st.session_state.candidate_saved:
+        st.success("✅ Details collected & saved!")
+    elif st.session_state.ended:
+        st.info("Conversation ended.")
+    else:
+        msg_count = len([m for m in st.session_state.display_messages if m["role"] == "user"])
+        # Approximate: 7 fields to collect, so ~7 user messages before tech questions
+        progress = min(msg_count / 7, 1.0)
+        st.progress(progress, text=f"Info gathering: {int(progress * 100)}%")
+
+    # Sentiment display
+    if st.session_state.sentiment_history:
+        latest = st.session_state.sentiment_history[-1]
+        emoji = {"positive": "😊", "negative": "😟", "neutral": "😐"}[latest]
+        color_class = f"sentiment-{latest}"
+        st.markdown(
+            f'<span class="sentiment-badge {color_class}">{emoji} {latest.capitalize()}</span>',
+            unsafe_allow_html=True,
+        )
 
 # ---------------------------------------------------------------------------
 # Render existing chat history
@@ -154,6 +217,10 @@ if prompt := st.chat_input(
     "Type your response here…" if not st.session_state.ended else "Conversation ended.",
     disabled=st.session_state.ended,
 ):
+    # Sentiment analysis on user input
+    sentiment = analyze_sentiment(prompt)
+    st.session_state.sentiment_history.append(sentiment)
+
     # Show user message
     with st.chat_message("user"):
         st.markdown(prompt)
@@ -191,12 +258,8 @@ if prompt := st.chat_input(
                     st.toast("✅ Candidate details saved!", icon="✅")
                 except Exception as exc:
                     st.error(f"⚠️ Could not save to database: {exc}")
-            else:
-                # Debug: log when the model doesn't produce the data block
-                import logging
-                logging.info("No candidate_data block found in this reply.")
 
-        # Strip hidden JSON and display
+        # Strip hidden JSON and display clean reply
         clean_reply = strip_candidate_data_block(raw_reply)
         st.markdown(clean_reply)
 
