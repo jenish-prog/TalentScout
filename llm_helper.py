@@ -13,12 +13,14 @@ Responsibilities
 import os
 import json
 import re
+import time
 import streamlit as st
 from openai import OpenAI
 
 # Groq's API is OpenAI-compatible; we use the openai SDK with a custom base_url.
 GROQ_BASE_URL = "https://api.groq.com/openai/v1"
-DEFAULT_MODEL = "llama-3.3-70b-versatile"
+DEFAULT_MODEL = "llama-3.1-8b-instant"
+_FALLBACK_MODELS = ["llama-3.1-8b-instant", "gemma2-9b-it"]
 
 # Positive / negative word lists for lightweight sentiment analysis
 _POSITIVE_WORDS = {
@@ -233,10 +235,22 @@ def chat(messages: list[dict], model: str | None = None) -> str:
         The assistant's response text.
     """
     client = _get_client()
-    response = client.chat.completions.create(
-        model=model or DEFAULT_MODEL,
-        messages=messages,
-        temperature=0.7,
-        max_tokens=1024,
-    )
-    return response.choices[0].message.content
+    models_to_try = [model or DEFAULT_MODEL] + [
+        m for m in _FALLBACK_MODELS if m != (model or DEFAULT_MODEL)
+    ]
+    last_err = None
+    for m in models_to_try:
+        try:
+            response = client.chat.completions.create(
+                model=m,
+                messages=messages,
+                temperature=0.7,
+                max_tokens=1024,
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            last_err = e
+            if "rate_limit" in str(e).lower() or "429" in str(e):
+                continue  # try next model
+            raise
+    raise last_err
